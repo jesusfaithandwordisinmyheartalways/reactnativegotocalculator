@@ -4,152 +4,260 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 
-function Calculator() {
-  const [userInput, setUserInput]  = useState('');
-  const [userInputTwo, setUserInputTwo] = useState('');
-  const [result, setResult] = useState(null);
-  const input = useRef();
-  useEffect(() => {
-    if(input.current) {
-      input.current.focus()
+
+function UserCalculator() {
+    const [userInput, setUserInput] = useState('')
+    const [calculatorResult, setCalculatorResult] = useState(null)
+    const [calcOperator, setCalcOperator] = useState(null)
+    const [previousNumber, setPreviousNumber] = useState('')
+    const [openParenthesis, setOpenParenthesis] = useState(true)
+
+
+    const CalculatorNumberPressed = (currentElement) => {
+        setUserInput((data) => data + currentElement)
     }
-  }, [input])
 
-  const UserCalculation = (data) => {
-        const numberOne =   parseFloat(userInput)
-       const numberTwo =  parseFloat(userInputTwo)
+    const CalculatorReset = () => {
+        setUserInput('')
+        setCalculatorResult(null)
+        setCalcOperator(null)
+        setPreviousNumber('')
+    }
 
-       if(isNaN(numberOne) || isNaN(numberTwo)) {
-           setResult('User must enter a valid number')
-           setUserInput('')
-           setUserInputTwo('');
-           input.current.focus()
-           return
-       }
-       let userCalculation;
-       switch(data) {
-        case "+":
-          userCalculation = numberOne + numberTwo;
+
+    const CalculatorToggleSign = () => {
+       setUserInput((currentElement) => (parseFloat(currentElement * -1).toString()))
+    }
+
+    const CalculatorPercentageConverter = () => {
+      setUserInput((currentElement) => (parseFloat(currentElement) / 100).toString())
+    }
+
+    const CalculatorParenthesisToggle = () => {
+      setUserInput((currentElement) => currentElement + (openParenthesis ? '(' : ')'))
+      setOpenParenthesis(!openParenthesis)
+    }
+
+
+
+    const CalculatorOperatorPressed = (operator) => {
+        if(userInput === '')return;
+        if(calculatorResult == null){
+          setPreviousNumber(userInput)
+        } else {
+          CalculatorCalculate()
+        }
+        setCalcOperator(operator)
+        setUserInput('')
+    }
+
+
+    const CalculatorCalculate  = () => {
+      if(!calcOperator || userInput === '') return;
+      const calculatorNumberOne = parseFloat(previousNumber)
+      const calculatorNumberTwo = parseFloat(userInput)
+      
+      let UserInputResults;
+      switch(calcOperator) {
+        case '+':
+          UserInputResults = calculatorNumberOne + calculatorNumberTwo;
           break;
           case "-":
-            userCalculation = numberOne - numberTwo;
+            UserInputResults = calculatorNumberOne - calculatorNumberTwo;
             break;
             case "*":
-              userCalculation = numberOne * numberTwo;
+              UserInputResults = calculatorNumberOne * calculatorNumberTwo;
               break;
               case "/":
-                userCalculation = (numberOne !== 0) ? numberOne / numberTwo : 'Unable to divide by Zero'
+                UserInputResults = (calculatorNumberTwo !== 0)? calculatorNumberOne / calculatorNumberTwo : 'Unable to divide by Zero'
                 break;
-                case "RESET":
-                    setUserInput('')
-                   setUserInputTwo('');
-                   input.current.focus()
-                  break;
-                default: 
-                userCalculation = 'invalid'
+                default:
+                  UserInputResults = 'Error'
+              }
 
-       }
-        setResult(userCalculation)
-  }
-
-return (
-
- 
-    <View style={styles.container}>
-
-      <Text style={styles.title}>User React Native Calculator</Text>
-      <TextInput ref={input} style={styles.input} keyboardType='numeric' onChangeText={setUserInput} value={userInput} placeholder='Enter Number' placeholderTextColor="black"></TextInput>
-        <TextInput style={styles.inputTwo} keyboardType='numeric' onChangeText={setUserInputTwo} value={userInputTwo} placeholder='Enter Second Number' placeholderTextColor="black"></TextInput>
-
-        <View style={styles.buttonSection}>
-            <TouchableOpacity  onPress={() => UserCalculation('+')} style={styles.userButton}>
-              <Text style={styles.userButtonText}>+</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => UserCalculation('-')} style={styles.userButton}>
-                <Text style={styles.userButtonText}> -</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => UserCalculation('*')} style={styles.userButton}>
-                <Text style={styles.userButtonText}> × </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => UserCalculation('/')} style={styles.userButton}>
-              <Text style={styles.userButtonText}> ÷</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => UserCalculation('RESET')} style={styles.userButton}>
-                <Text style={styles.userButtonText}>  ↻ </Text>
-            </TouchableOpacity>
-        </View>
-
-
-        {result !== null && (
-          <Text style={styles.userResults}> Calculation Results: {result} </Text>
-        )}
+              setCalculatorResult(UserInputResults);
+              setUserInput('')
+              setCalcOperator(null)
+              setPreviousNumber(UserInputResults.toString())
       
+    }
 
-    </View>
+
+  return (
+    <>
+
+      <View style={styles.container}>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputText}>{userInput || calculatorResult || '0'}</Text>
+            </View>
+
+            <View style={styles.buttonWrapper}>
+                <View style={styles.buttonRowSection}>
+                 <TouchableOpacity onPress={CalculatorReset} style={styles.buttonBackGround}>
+                  <Text style={styles.resetButtonText}> C </Text>
+                 </TouchableOpacity> 
+                 <TouchableOpacity onPress={CalculatorParenthesisToggle} style={styles.buttonBackGround}>
+                  <Text style={styles.symbolsButtonText}> () </Text>
+                 </TouchableOpacity>
+                 <TouchableOpacity onPress={CalculatorPercentageConverter} style={styles.buttonBackGround}>
+                  <Text style={styles.symbolsButtonText}> % </Text>
+                 </TouchableOpacity>
+                 <TouchableOpacity onPress={() => CalculatorOperatorPressed('/')} style={styles.buttonBackGround}>
+                  <Text style={styles.symbolsButtonText}> ÷ </Text>
+                 </TouchableOpacity>
+                </View>
 
 
-);
+
+                <View style={styles.buttonRowSection}>
+                  { [7, 8, 9].map((elements) => (
+                    <TouchableOpacity onPress={() => CalculatorNumberPressed(elements.toString())} key={elements} style={styles.buttonBackGround} >
+                      <Text style={styles.buttonText}> {elements} </Text>
+                    </TouchableOpacity>
+                  ))}
+                    <TouchableOpacity onPress={() => CalculatorOperatorPressed('*')} style={styles.buttonBackGround}>
+                        <Text style={styles.symbolsButtonText}> x </Text>
+                    </TouchableOpacity>
+
+                </View>
+
+
+                <View style={styles.buttonRowSection}>
+                  {[4, 5, 6].map((elements) => (
+                    <TouchableOpacity onPress={() => CalculatorNumberPressed(elements.toString())} key={elements}  style={styles.buttonBackGround} >
+                      <Text style={styles.buttonText}> {elements} </Text>
+                    </TouchableOpacity>
+                  ))}
+                   <TouchableOpacity onPress={() => CalculatorOperatorPressed('-')} style={styles.buttonBackGround}>
+                      <Text style={styles.symbolsButtonText}> - </Text>
+                   </TouchableOpacity>
+
+                </View>
+
+
+                <View style={styles.buttonRowSection}>
+                  {[1, 2, 3].map((elements) => (
+                    <TouchableOpacity onPress={() => CalculatorNumberPressed(elements.toString())} key={elements} style={styles.buttonBackGround} >
+                        <Text style={styles.buttonText}> {elements} </Text>
+                    </TouchableOpacity>
+                  ))}
+                   <TouchableOpacity onPress={() => CalculatorOperatorPressed('+')} style={styles.buttonBackGround}>
+                      <Text style={styles.symbolsButtonText}> + </Text>
+                   </TouchableOpacity>
+                  
+                </View>
+
+
+
+
+                <View style={styles.buttonRowSection}>
+                  <TouchableOpacity onPress={CalculatorToggleSign} style={styles.buttonBackGround}>
+                      <Text style={styles.buttonText}> +/- </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => CalculatorNumberPressed('0')} style={styles.buttonBackGround}>
+                    <Text style={styles.buttonText}> 0 </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => CalculatorNumberPressed('.')} style={styles.buttonBackGround}>
+                    <Text style={styles.buttonText}> . </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={CalculatorCalculate} style={styles.buttonBackGround}>
+                    <Text style={styles.symbolsButtonText}> = </Text>
+                  </TouchableOpacity>
+
+
+
+
+                </View>
+
+
+
+
+
+
+            </View>
+
+
+
+
+
+
+
+
+
+      </View>
+
+
+    </>
+    
+  );
 }
-export default Calculator;
 
-// Updated styles
+
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'whitesmoke'
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: 'orange',
+  
+  inputWrapper: {
+    width: '100%',
+    backgroundColor: 'white',
+    padding:15,
+    alignItems: 'flex-end',
+    marginBottom: 10
   },
-  input: {
-    width: '90%',
-    height: 50,
-    borderWidth: 3,
-    borderColor: 'purple',
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    fontSize: 18,
-    textAlign: 'center',
-    color: 'green',
+
+  inputText: {
+    fontSize:25,
+    fontWeight: 800,
+    color: 'black',
+    alignItems: 'flex-end',
+
   },
-  inputTwo: {
-    width: '90%',
-    height: 50,
-    borderWidth: 3,
-    borderColor: 'blue',
-    marginBottom: 15,
-    paddingHorizontal: 15,
-    fontSize: 18,
-    textAlign: 'center',
-    color: 'green',
+  buttonWrapper: {
+    width:'100%'
   },
-  buttonSection: {
+  buttonRowSection: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    alignItems: 'center',
-    marginBottom: 30,
-    width: '80%',
+    marginBottom: 8
   },
-  userButton: {
-    backgroundColor: 'gold',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    minWidth: 50,
-    borderRadius: 10,
+
+  buttonBackGround: {
+    width:'21%',
+    backgroundColor:'black',
+    borderRadius:10,
+    padding:20,
+    alignItems: 'center'
   },
-  userButtonText: {
-    color: 'black',
-    fontSize: 16,
-    fontWeight: 'bold',
+  buttonText: {
+    fontSize:20,
+    fontWeight:800,
+    color:'white'
   },
-  userResults: {
-    color: 'black',
-    fontSize: 23,
+
+   resetButtonText: {
+    fontSize:20,
+    fontWeight:800,
+    color:'red'
   },
+
+  symbolsButtonText: {
+    fontSize:20,
+    fontWeight:800,
+    color:'lightgreen'
+  }
+
+  
 })
+
+
+export default UserCalculator;
